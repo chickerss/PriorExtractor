@@ -2,8 +2,11 @@ import { parsePDF } from './pdf-parse-wrapper';
 import { InsertExtractedCode } from '@shared/schema';
 
 // Regular expressions to identify CPT, HCPCS, and PLA codes
-const CPT_CODE_REGEX = /\b\d{5}\b/g;
-const HCPCS_CODE_REGEX = /\b[A-Z]\d{4}\b/g;
+// CPT codes are 5 digits, including category II (XXXXX) and category III (XXXXT)
+const CPT_CODE_REGEX = /\b\d{5}(?:[0-9]|T)?\b/g;
+// HCPCS codes are a letter followed by 4 digits, with common formats like J1234, G0283
+const HCPCS_CODE_REGEX = /\b[A-Z][0-9]{4}\b/g;
+// PLA codes are 4 digits followed by U (0001U to 9999U format)
 const PLA_CODE_REGEX = /\b\d{4}U\b/g;
 
 /**

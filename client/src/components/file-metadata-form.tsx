@@ -145,7 +145,7 @@ export function FileMetadataForm({
                 <FormItem className="sm:col-span-3">
                   <FormLabel>Year</FormLabel>
                   <Select
-                    value={field.value.toString()}
+                    value={field.value?.toString() || currentYear.toString()}
                     onValueChange={(value) => field.onChange(parseInt(value, 10))}
                   >
                     <FormControl>

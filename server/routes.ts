@@ -109,6 +109,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadataRaw.payerName = req.body.payer_name;
       }
       
+      if (req.body.plan_name) {
+        metadataRaw.planName = req.body.plan_name;
+      }
+      
       if (req.body.year) {
         metadataRaw.year = parseInt(req.body.year, 10);
       }

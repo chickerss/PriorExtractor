@@ -89,10 +89,15 @@ export function ResultsSection({
     
     // Then sort
     const sorted = [...filtered].sort((a, b) => {
-      if (a[sortField] < b[sortField]) {
+      // Handle cases where the field could be undefined
+      const aValue = a[sortField] ?? "";
+      const bValue = b[sortField] ?? "";
+      
+      // Compare values (handle string/number comparison)
+      if (aValue < bValue) {
         return sortDirection === "asc" ? -1 : 1;
       }
-      if (a[sortField] > b[sortField]) {
+      if (aValue > bValue) {
         return sortDirection === "asc" ? 1 : -1;
       }
       return 0;

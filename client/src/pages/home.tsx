@@ -52,6 +52,10 @@ export default function Home() {
         formData.append("payer_name", data.metadata.payerName);
       }
       
+      if (data.metadata && data.metadata.planName) {
+        formData.append("plan_name", data.metadata.planName);
+      }
+      
       if (data.metadata && data.metadata.year) {
         formData.append("year", data.metadata.year.toString());
       }
@@ -117,6 +121,7 @@ export default function Home() {
         // Setup default metadata if none provided
         const defaultMetadata = {
           payerName: "Unknown Payer",
+          planName: file.file.name || "Unknown Plan",
           year: new Date().getFullYear(),
           lineOfBusiness: "Unknown"
         };
