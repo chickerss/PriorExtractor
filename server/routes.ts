@@ -187,11 +187,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const csvStringifier = createObjectCsvStringifier({
         header: [
           { id: 'payerName', title: 'Payer' },
-          { id: 'sourceFile', title: 'Plan' },
+          { id: 'planName', title: 'Plan' },
           { id: 'lineOfBusiness', title: 'Line of Business' },
           { id: 'year', title: 'Year' },
           { id: 'codeType', title: 'Code Type' },
           { id: 'code', title: 'Code' },
+          { id: 'sourceFile', title: 'Source File' },
         ]
       });
       

@@ -9,7 +9,7 @@ export function generateCSVFromCodes(codes: ExtractedCode[]): string {
   }
   
   // Define headers (reordered as requested)
-  const headers = ["Payer", "Plan", "Line of Business", "Year", "Code Type", "Code"];
+  const headers = ["Payer", "Plan", "Line of Business", "Year", "Code Type", "Code", "Source File"];
   
   // Create CSV header row
   const csvContent = [
@@ -18,11 +18,12 @@ export function generateCSVFromCodes(codes: ExtractedCode[]): string {
     ...codes.map(code => [
       // Escape values that might contain commas
       `"${code.payerName?.replace(/"/g, '""') || ""}"`,
-      `"${code.sourceFile?.replace(/"/g, '""') || ""}"`,
+      `"${code.planName?.replace(/"/g, '""') || ""}"`,
       `"${code.lineOfBusiness?.replace(/"/g, '""') || ""}"`,
       code.year || "",
       code.codeType || "",
-      code.code || ""
+      code.code || "",
+      `"${code.sourceFile?.replace(/"/g, '""') || ""}"`
     ].join(","))
   ].join("\n");
   

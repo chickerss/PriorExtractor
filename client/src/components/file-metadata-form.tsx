@@ -54,6 +54,7 @@ export function FileMetadataForm({
     resolver: zodResolver(fileMetadataSchema),
     defaultValues: {
       payerName: selectedFile?.metadata?.payerName || "",
+      planName: selectedFile?.metadata?.planName || "",
       year: selectedFile?.metadata?.year || currentYear,
       lineOfBusiness: selectedFile?.metadata?.lineOfBusiness || "Medicare",
     },
@@ -122,6 +123,23 @@ export function FileMetadataForm({
 
             <FormField
               control={form.control}
+              name="planName"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-3">
+                  <FormLabel>Plan Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Gold PPO, Bronze HMO"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="year"
               render={({ field }) => (
                 <FormItem className="sm:col-span-3">
@@ -152,7 +170,7 @@ export function FileMetadataForm({
               control={form.control}
               name="lineOfBusiness"
               render={({ field }) => (
-                <FormItem className="sm:col-span-6">
+                <FormItem className="sm:col-span-3">
                   <FormLabel>Line of Business</FormLabel>
                   <Select
                     value={field.value}

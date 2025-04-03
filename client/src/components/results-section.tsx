@@ -77,6 +77,7 @@ export function ResultsSection({
       const matchesSearch = searchTerm === "" || 
         code.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
         code.payerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (code.planName && code.planName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         code.lineOfBusiness.toLowerCase().includes(searchTerm.toLowerCase()) ||
         code.sourceFile.toLowerCase().includes(searchTerm.toLowerCase());
       
@@ -216,10 +217,10 @@ export function ResultsSection({
               </TableHead>
               <TableHead 
                 className="cursor-pointer hover:text-gray-700"
-                onClick={() => handleSort("sourceFile")}
+                onClick={() => handleSort("planName")}
               >
                 Plan
-                {sortField === "sourceFile" && (
+                {sortField === "planName" && (
                   sortDirection === "asc" ? 
                     <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
                     <ArrowDown className="inline-block ml-1 h-4 w-4" />
@@ -288,8 +289,8 @@ export function ResultsSection({
               currentItems.map((code) => (
                 <TableRow key={code.id} className="hover:bg-gray-50">
                   <TableCell>{code.payerName}</TableCell>
-                  <TableCell className="truncate max-w-xs" title={code.sourceFile}>
-                    {code.sourceFile}
+                  <TableCell className="truncate max-w-xs" title={code.planName || "N/A"}>
+                    {code.planName || "-"}
                   </TableCell>
                   <TableCell>{code.lineOfBusiness}</TableCell>
                   <TableCell>{code.year}</TableCell>

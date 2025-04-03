@@ -24,7 +24,7 @@ export async function extractTextFromPdf(pdfBuffer: Buffer | ArrayBuffer): Promi
  */
 export function extractCodesFromText(
   textContent: string, 
-  metadata: { payerName: string; year: number; lineOfBusiness: string; sourceFile: string }
+  metadata: { payerName: string; planName?: string; year: number; lineOfBusiness: string; sourceFile: string }
 ): InsertExtractedCode[] {
   const codes: InsertExtractedCode[] = [];
   
@@ -46,6 +46,7 @@ export function extractCodesFromText(
       code,
       codeType: 'CPT',
       payerName: metadata.payerName,
+      planName: metadata.planName,
       lineOfBusiness: metadata.lineOfBusiness,
       year: metadata.year,
       sourceFile: metadata.sourceFile
@@ -58,6 +59,7 @@ export function extractCodesFromText(
       code,
       codeType: 'HCPCS',
       payerName: metadata.payerName,
+      planName: metadata.planName,
       lineOfBusiness: metadata.lineOfBusiness,
       year: metadata.year,
       sourceFile: metadata.sourceFile
@@ -70,6 +72,7 @@ export function extractCodesFromText(
       code,
       codeType: 'PLA',
       payerName: metadata.payerName,
+      planName: metadata.planName,
       lineOfBusiness: metadata.lineOfBusiness,
       year: metadata.year,
       sourceFile: metadata.sourceFile
@@ -84,7 +87,7 @@ export function extractCodesFromText(
  */
 export async function processPdf(
   pdfBuffer: ArrayBuffer, 
-  metadata: { payerName?: string; year?: number; lineOfBusiness?: string; sourceFile: string }
+  metadata: { payerName?: string; planName?: string; year?: number; lineOfBusiness?: string; sourceFile: string }
 ): Promise<InsertExtractedCode[]> {
   // Extract text from PDF
   const text = await extractTextFromPdf(pdfBuffer);
@@ -93,6 +96,7 @@ export async function processPdf(
   // Create a new metadata object with default values for optional fields
   const normalizedMetadata = {
     payerName: metadata.payerName || "Unknown",
+    planName: metadata.planName || "",
     year: metadata.year || new Date().getFullYear(),
     lineOfBusiness: metadata.lineOfBusiness || "Unknown",
     sourceFile: metadata.sourceFile

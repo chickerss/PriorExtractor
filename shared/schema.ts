@@ -6,6 +6,7 @@ export const extractedCodeSchema = z.object({
   code: z.string().min(1),
   codeType: z.string().min(1), // CPT, HCPCS, or PLA
   payerName: z.string().min(1),
+  planName: z.string().optional(),
   lineOfBusiness: z.string().min(1),
   year: z.number().int().min(2000).max(2100),
   sourceFile: z.string().min(1),
@@ -19,6 +20,7 @@ export const insertExtractedCodeSchema = extractedCodeSchema.omit({
 // Create validation schema for file metadata
 export const fileMetadataSchema = z.object({
   payerName: z.string().optional(),
+  planName: z.string().optional(),
   year: z.number().int().min(2000).max(2100).optional(),
   lineOfBusiness: z.string().optional(),
 });
