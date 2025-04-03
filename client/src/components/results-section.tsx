@@ -175,6 +175,27 @@ export function ResultsSection({
               Upload to Azure
             </Button>
           )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              if (confirm("Are you sure you want to clear all extracted data?")) {
+                fetch("/api/codes", { method: "DELETE" })
+                  .then(res => res.json())
+                  .then(() => {
+                    // Refresh code data
+                    queryClient.invalidateQueries({ queryKey: ["/api/codes"] });
+                  })
+                  .catch(err => {
+                    console.error("Error clearing data:", err);
+                  });
+              }
+            }}
+            className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+          >
+            <Trash2 className="h-4 w-4 mr-1.5" />
+            Clear All
+          </Button>
         </div>
       </div>
 
