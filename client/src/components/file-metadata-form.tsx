@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FileMetadata, UploadedFile, fileMetadataSchema } from "@shared/schema";
@@ -50,6 +50,7 @@ export function FileMetadataForm({
     "Other"
   ];
 
+  // Initialize form with proper defaults
   const form = useForm<FileMetadata>({
     resolver: zodResolver(fileMetadataSchema),
     defaultValues: {
@@ -59,6 +60,30 @@ export function FileMetadataForm({
       lineOfBusiness: selectedFile?.metadata?.lineOfBusiness || "Medicare",
     },
   });
+  
+  // Use useEffect to reset form when selected file changes
+  useEffect(() => {
+    if (selectedFile) {
+      form.reset({
+        payerName: selectedFile?.metadata?.payerName || "",
+        planName: selectedFile?.metadata?.planName || "",
+        year: selectedFile?.metadata?.year || currentYear,
+        lineOfBusiness: selectedFile?.metadata?.lineOfBusiness || "Medicare",
+      });
+    }
+  }, [selectedFile?.id, form]);
+  
+  // Save form values whenever they change
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      if (selectedFile && value.payerName) {
+        // Only update if we have actual values
+        onUpdateMetadata(selectedFile.id, value as FileMetadata);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, onUpdateMetadata, selectedFile]);
 
   const handleSubmit = (data: FileMetadata) => {
     onUpdateMetadata(selectedFile.id, data);
