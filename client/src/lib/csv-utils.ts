@@ -8,21 +8,21 @@ export function generateCSVFromCodes(codes: ExtractedCode[]): string {
     return "";
   }
   
-  // Define headers
-  const headers = ["Code", "Type", "Payer", "Line of Business", "Year", "Source File"];
+  // Define headers (reordered as requested)
+  const headers = ["Payer", "Plan", "Line of Business", "Year", "Code Type", "Code"];
   
   // Create CSV header row
   const csvContent = [
     headers.join(","),
-    // Map each code to a CSV row
+    // Map each code to a CSV row (reordered to match headers)
     ...codes.map(code => [
-      code.code,
-      code.codeType,
       // Escape values that might contain commas
-      `"${code.payerName.replace(/"/g, '""')}"`,
-      `"${code.lineOfBusiness.replace(/"/g, '""')}"`,
-      code.year,
-      `"${code.sourceFile.replace(/"/g, '""')}"`
+      `"${code.payerName?.replace(/"/g, '""') || ""}"`,
+      `"${code.sourceFile?.replace(/"/g, '""') || ""}"`,
+      `"${code.lineOfBusiness?.replace(/"/g, '""') || ""}"`,
+      code.year || "",
+      code.codeType || "",
+      code.code || ""
     ].join(","))
   ].join("\n");
   

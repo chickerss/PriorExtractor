@@ -183,15 +183,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "No codes found to export" });
       }
       
-      // Create CSV stringifier
+      // Create CSV stringifier with reordered fields
       const csvStringifier = createObjectCsvStringifier({
         header: [
-          { id: 'code', title: 'Code' },
-          { id: 'codeType', title: 'Type' },
           { id: 'payerName', title: 'Payer' },
+          { id: 'sourceFile', title: 'Plan' },
           { id: 'lineOfBusiness', title: 'Line of Business' },
           { id: 'year', title: 'Year' },
-          { id: 'sourceFile', title: 'Source File' },
+          { id: 'codeType', title: 'Code Type' },
+          { id: 'code', title: 'Code' },
         ]
       });
       

@@ -205,32 +205,21 @@ export function ResultsSection({
             <TableRow>
               <TableHead 
                 className="cursor-pointer hover:text-gray-700"
-                onClick={() => handleSort("code")}
-              >
-                Code
-                {sortField === "code" && (
-                  sortDirection === "asc" ? 
-                    <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
-                    <ArrowDown className="inline-block ml-1 h-4 w-4" />
-                )}
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:text-gray-700"
-                onClick={() => handleSort("codeType")}
-              >
-                Type
-                {sortField === "codeType" && (
-                  sortDirection === "asc" ? 
-                    <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
-                    <ArrowDown className="inline-block ml-1 h-4 w-4" />
-                )}
-              </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:text-gray-700"
                 onClick={() => handleSort("payerName")}
               >
                 Payer
                 {sortField === "payerName" && (
+                  sortDirection === "asc" ? 
+                    <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
+                    <ArrowDown className="inline-block ml-1 h-4 w-4" />
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:text-gray-700"
+                onClick={() => handleSort("sourceFile")}
+              >
+                Plan
+                {sortField === "sourceFile" && (
                   sortDirection === "asc" ? 
                     <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
                     <ArrowDown className="inline-block ml-1 h-4 w-4" />
@@ -260,10 +249,21 @@ export function ResultsSection({
               </TableHead>
               <TableHead 
                 className="cursor-pointer hover:text-gray-700"
-                onClick={() => handleSort("sourceFile")}
+                onClick={() => handleSort("codeType")}
               >
-                Source File
-                {sortField === "sourceFile" && (
+                Code Type
+                {sortField === "codeType" && (
+                  sortDirection === "asc" ? 
+                    <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
+                    <ArrowDown className="inline-block ml-1 h-4 w-4" />
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:text-gray-700"
+                onClick={() => handleSort("code")}
+              >
+                Code
+                {sortField === "code" && (
                   sortDirection === "asc" ? 
                     <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
                     <ArrowDown className="inline-block ml-1 h-4 w-4" />
@@ -287,14 +287,14 @@ export function ResultsSection({
             ) : (
               currentItems.map((code) => (
                 <TableRow key={code.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium">{code.code}</TableCell>
-                  <TableCell>{code.codeType}</TableCell>
                   <TableCell>{code.payerName}</TableCell>
-                  <TableCell>{code.lineOfBusiness}</TableCell>
-                  <TableCell>{code.year}</TableCell>
                   <TableCell className="truncate max-w-xs" title={code.sourceFile}>
                     {code.sourceFile}
                   </TableCell>
+                  <TableCell>{code.lineOfBusiness}</TableCell>
+                  <TableCell>{code.year}</TableCell>
+                  <TableCell>{code.codeType}</TableCell>
+                  <TableCell className="font-medium">{code.code}</TableCell>
                 </TableRow>
               ))
             )}
