@@ -585,7 +585,12 @@
                         uploadedFiles.push({
                             id: fileId,
                             file: file,
-                            status: 'pending'
+                            status: 'pending',
+                            metadata: {
+                                payerName: '',
+                                year: parseInt(currentYear),
+                                lineOfBusiness: 'Medicare'
+                            }
                         });
                     });
                     
@@ -713,14 +718,12 @@
             // Save metadata for current file
             function saveCurrentMetadata() {
                 if (selectedFileIndex >= 0 && selectedFileIndex < uploadedFiles.length) {
-                    // Only save if payer name is not empty
-                    if (payerNameInput.value.trim()) {
-                        uploadedFiles[selectedFileIndex].metadata = {
-                            payerName: payerNameInput.value.trim(),
-                            year: parseInt(yearSelect.value),
-                            lineOfBusiness: lineOfBusinessSelect.value
-                        };
-                    }
+                    // Always save current form values so validation works correctly
+                    uploadedFiles[selectedFileIndex].metadata = {
+                        payerName: payerNameInput.value.trim(),
+                        year: parseInt(yearSelect.value),
+                        lineOfBusiness: lineOfBusinessSelect.value
+                    };
                 }
             }
             
