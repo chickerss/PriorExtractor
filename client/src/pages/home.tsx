@@ -47,22 +47,14 @@ export default function Home() {
       const formData = new FormData();
       formData.append("file", data.file);
       
-      // Only append metadata fields if they exist
-      if (data.metadata && data.metadata.payerName) {
-        formData.append("payer_name", data.metadata.payerName);
-      }
+      console.log("Sending metadata with file:", data.metadata);
       
-      if (data.metadata && data.metadata.planName) {
-        formData.append("plan_name", data.metadata.planName);
-      }
-      
-      if (data.metadata && data.metadata.year) {
-        formData.append("year", data.metadata.year.toString());
-      }
-      
-      if (data.metadata && data.metadata.lineOfBusiness) {
-        formData.append("line_of_business", data.metadata.lineOfBusiness);
-      }
+      // Always append metadata fields, even if they're empty strings
+      // to ensure they get properly passed to the server
+      formData.append("payer_name", data.metadata?.payerName || "Unknown Payer");
+      formData.append("plan_name", data.metadata?.planName || data.file.name || "Unknown Plan");
+      formData.append("year", data.metadata?.year?.toString() || new Date().getFullYear().toString());
+      formData.append("line_of_business", data.metadata?.lineOfBusiness || "Unknown");
       
       const response = await fetch("/api/process-pdf", {
         method: "POST",

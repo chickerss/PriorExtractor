@@ -99,12 +99,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
-      // Setup metadata values with optional fields
+      console.log("Processing PDF file with form data:", req.body);
+      
+      // Setup metadata values with optional fields and defaults
       const metadataRaw: any = {
         sourceFile: req.file.originalname,
+        payerName: "Unknown Payer",
+        planName: req.file.originalname,
+        year: new Date().getFullYear(),
+        lineOfBusiness: "Unknown"
       };
       
-      // Only add metadata fields if they are provided
+      // Only override default metadata fields if they are provided in the request
       if (req.body.payer_name) {
         metadataRaw.payerName = req.body.payer_name;
       }
@@ -121,11 +127,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadataRaw.lineOfBusiness = req.body.line_of_business;
       }
       
+      console.log("Using metadata:", metadataRaw);
+      
       // Process the PDF file with the metadata (default or provided)
-      const extractedCodes = await processPdf(req.file.buffer, {
-        ...metadataRaw,
-        sourceFile: req.file.originalname,
-      });
+      const extractedCodes = await processPdf(req.file.buffer, metadataRaw);
       
       // Save the extracted codes to storage
       const savedCodes = await storage.saveExtractedCodes(extractedCodes);
