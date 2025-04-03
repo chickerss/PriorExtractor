@@ -49,12 +49,17 @@ export default function Home() {
       
       console.log("Sending metadata with file:", data.metadata);
       
-      // Always append metadata fields, even if they're empty strings
-      // to ensure they get properly passed to the server
-      formData.append("payer_name", data.metadata?.payerName || "Unknown Payer");
-      formData.append("plan_name", data.metadata?.planName || data.file.name || "Unknown Plan");
-      formData.append("year", data.metadata?.year?.toString() || new Date().getFullYear().toString());
-      formData.append("line_of_business", data.metadata?.lineOfBusiness || "Unknown");
+      // Always append metadata fields with user-entered values or reasonable defaults
+      // Handle optional fields in metadata
+      const payerName = data.metadata?.payerName ?? "Unknown Payer";
+      const planName = data.metadata?.planName ?? data.file.name ?? "Unknown Plan";
+      const year = data.metadata?.year ?? new Date().getFullYear();
+      const lineOfBusiness = data.metadata?.lineOfBusiness ?? "Unknown";
+      
+      formData.append("payer_name", payerName);
+      formData.append("plan_name", planName); 
+      formData.append("year", year.toString());
+      formData.append("line_of_business", lineOfBusiness);
       
       const response = await fetch("/api/process-pdf", {
         method: "POST",
@@ -110,18 +115,18 @@ export default function Home() {
           )
         );
         
-        // Setup default metadata if none provided
-        const defaultMetadata = {
+        // Setup default metadata if none provided, but prioritize user-entered values
+        const metadataToUse = file.metadata || {
           payerName: "Unknown Payer",
-          planName: file.file.name || "Unknown Plan",
+          planName: file.file.name,
           year: new Date().getFullYear(),
           lineOfBusiness: "Unknown"
         };
         
-        // Process the file using the mutation
+        // Process the file using the mutation with prioritized user values
         await processPdfMutation.mutateAsync({ 
           file: file.file, 
-          metadata: file.metadata || defaultMetadata 
+          metadata: metadataToUse
         });
         
         // Update file status to processed

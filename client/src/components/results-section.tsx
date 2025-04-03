@@ -25,7 +25,8 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { Download, ArrowUp, ArrowDown, Search, Upload } from "lucide-react";
+import { Download, ArrowUp, ArrowDown, Search, Upload, Trash2 } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 interface ResultsSectionProps {
   extractedCodes: ExtractedCode[];

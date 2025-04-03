@@ -101,31 +101,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Processing PDF file with form data:", req.body);
       
-      // Setup metadata values with optional fields and defaults
+      // Use the metadata values from the request, with the original filename as default
+      // Always use the values from the form if they are provided, don't check if they exist
       const metadataRaw: any = {
         sourceFile: req.file.originalname,
-        payerName: "Unknown Payer",
-        planName: req.file.originalname,
-        year: new Date().getFullYear(),
-        lineOfBusiness: "Unknown"
+        payerName: req.body.payer_name || "Unknown Payer",
+        planName: req.body.plan_name || req.file.originalname,
+        year: req.body.year ? parseInt(req.body.year, 10) : new Date().getFullYear(),
+        lineOfBusiness: req.body.line_of_business || "Unknown"
       };
-      
-      // Only override default metadata fields if they are provided in the request
-      if (req.body.payer_name) {
-        metadataRaw.payerName = req.body.payer_name;
-      }
-      
-      if (req.body.plan_name) {
-        metadataRaw.planName = req.body.plan_name;
-      }
-      
-      if (req.body.year) {
-        metadataRaw.year = parseInt(req.body.year, 10);
-      }
-      
-      if (req.body.line_of_business) {
-        metadataRaw.lineOfBusiness = req.body.line_of_business;
-      }
       
       console.log("Using metadata:", metadataRaw);
       
