@@ -1,20 +1,18 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Define the base schema for extracted codes
-export const extractedCodes = pgTable("extracted_codes", {
-  id: serial("id").primaryKey(),
-  code: text("code").notNull(),
-  codeType: text("code_type").notNull(), // CPT or HCPCS
-  payerName: text("payer_name").notNull(),
-  lineOfBusiness: text("line_of_business").notNull(),
-  year: integer("year").notNull(),
-  sourceFile: text("source_file").notNull(),
+// Define the base schema for extracted codes using Zod directly (no database dependency)
+export const extractedCodeSchema = z.object({
+  id: z.number().optional(),
+  code: z.string().min(1),
+  codeType: z.string().min(1), // CPT, HCPCS, or PLA
+  payerName: z.string().min(1),
+  lineOfBusiness: z.string().min(1),
+  year: z.number().int().min(2000).max(2100),
+  sourceFile: z.string().min(1),
 });
 
 // Create the insert schema for extracted codes
-export const insertExtractedCodeSchema = createInsertSchema(extractedCodes).omit({
+export const insertExtractedCodeSchema = extractedCodeSchema.omit({
   id: true,
 });
 
@@ -34,7 +32,7 @@ export const azureConnectionSchema = z.object({
 
 // Types for the application
 export type InsertExtractedCode = z.infer<typeof insertExtractedCodeSchema>;
-export type ExtractedCode = typeof extractedCodes.$inferSelect;
+export type ExtractedCode = z.infer<typeof extractedCodeSchema>;
 export type FileMetadata = z.infer<typeof fileMetadataSchema>;
 export type AzureConnection = z.infer<typeof azureConnectionSchema>;
 

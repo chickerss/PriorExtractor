@@ -1,5 +1,4 @@
 import { 
-  extractedCodes, 
   type ExtractedCode, 
   type InsertExtractedCode 
 } from "@shared/schema";
