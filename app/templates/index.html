@@ -653,14 +653,20 @@
                 currentFileName.textContent = selectedFile.file.name;
                 
                 // Set form values if metadata exists
-                if (selectedFile.metadata) {
+                if (selectedFile.metadata && selectedFile.metadata.payerName) {
                     payerNameInput.value = selectedFile.metadata.payerName;
                     yearSelect.value = selectedFile.metadata.year;
                     lineOfBusinessSelect.value = selectedFile.metadata.lineOfBusiness;
                 } else {
+                    // Set default values
                     payerNameInput.value = '';
                     yearSelect.value = currentYear;
                     lineOfBusinessSelect.value = 'Medicare';
+                    
+                    // If there was incomplete metadata, clear it to prevent confusion
+                    if (selectedFile.metadata && !selectedFile.metadata.payerName) {
+                        delete selectedFile.metadata;
+                    }
                 }
                 
                 // Update previous/next buttons
@@ -707,11 +713,14 @@
             // Save metadata for current file
             function saveCurrentMetadata() {
                 if (selectedFileIndex >= 0 && selectedFileIndex < uploadedFiles.length) {
-                    uploadedFiles[selectedFileIndex].metadata = {
-                        payerName: payerNameInput.value,
-                        year: parseInt(yearSelect.value),
-                        lineOfBusiness: lineOfBusinessSelect.value
-                    };
+                    // Only save if payer name is not empty
+                    if (payerNameInput.value.trim()) {
+                        uploadedFiles[selectedFileIndex].metadata = {
+                            payerName: payerNameInput.value.trim(),
+                            year: parseInt(yearSelect.value),
+                            lineOfBusiness: lineOfBusinessSelect.value
+                        };
+                    }
                 }
             }
             
@@ -721,8 +730,11 @@
                 saveCurrentMetadata();
                 
                 // Check if any files have incomplete metadata
-                const filesWithoutMetadata = uploadedFiles.filter(file => !file.metadata || 
-                                                                       !file.metadata.payerName);
+                const filesWithoutMetadata = uploadedFiles.filter(file => {
+                    return !file.metadata || 
+                           !file.metadata.payerName || 
+                           file.metadata.payerName.trim() === "";
+                });
                 
                 if (filesWithoutMetadata.length > 0) {
                     alert('Please provide metadata for all uploaded files before processing');
