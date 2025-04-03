@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prior Authorization Code Extractor</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding-bottom: 40px;
+        }
+        .navbar-brand {
+            font-weight: 600;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            font-weight: 600;
+            background-color: #ffffff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragging {
+            background-color: #e9ecef;
+            border-color: #007bff;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        .table th {
+            cursor: pointer;
+        }
+        .page-item.active .page-link {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .file-icon {
+            color: #dc3545;
+            margin-right: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+        }
+        .azure-form {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-clipboard-check text-primary me-2"></i>
+                Prior Authorization Manager
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="fs-3">Prior Authorization Requirements</h1>
+                <p class="text-muted">Upload, extract, and manage CPT, HCPCS, and PLA codes from multiple payers</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Upload Section -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header py-3">
+                        <h2 class="card-title mb-0 fs-5">Upload Documents</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Upload PDF files to extract CPT, HCPCS, and PLA codes</p>
+                        
+                        <!-- File Uploader -->
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-upload fs-1 text-muted mb-3"></i>
+                            <div>
+                                <p class="mb-1">Upload PDF files</p>
+                                <p class="text-muted small">or drag and drop</p>
+                                <p class="text-muted small">PDF files up to 10MB each</p>
+                            </div>
+                            <input type="file" id="fileInput" accept=".pdf" class="d-none">
+                        </div>
+                        
+                        <!-- Uploaded Files List -->
+                        <div id="uploadedFiles" class="mt-4 d-none">
+                            <h6 class="mb-3">Uploaded files</h6>
+                            <div class="border rounded overflow-auto" style="max-height: 200px;">
+                                <div id="filesList">
+                                    <!-- Files will be added here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- File Metadata Form -->
+                        <div id="metadataForm" class="mt-4 d-none">
+                            <h6 class="mb-3">File Metadata</h6>
+                            <div class="bg-light p-3 rounded mb-3">
+                                <p class="mb-0 small">Entering details for: <span id="currentFileName" class="fw-medium"></span></p>
+                            </div>
+                            
+                            <form id="fileMetadataForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="payerName" class="form-label">Payer Name</label>
+                                        <input type="text" class="form-control" id="payerName" placeholder="e.g., Anthem, UnitedHealthcare" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="year" class="form-label">Year</label>
+                                        <select class="form-select" id="year" required>
+                                            <!-- Years will be added via JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="lineOfBusiness" class="form-label">Line of Business</label>
+                                    <select class="form-select" id="lineOfBusiness" required>
+                                        <option value="Medicare">Medicare</option>
+                                        <option value="Medicaid">Medicaid</option>
+                                        <option value="Commercial">Commercial</option>
+                                        <option value="Marketplace">Marketplace</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="button" class="btn btn-outline-secondary" id="prevFile" disabled>
+                                        <i class="fas fa-chevron-left me-1"></i> Previous
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="nextFile" disabled>
+                                        Next <i class="fas fa-chevron-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="mt-4 d-flex justify-content-end">
+                            <button class="btn btn-primary" id="processFiles" disabled>
+                                <i class="fas fa-plus-circle me-2"></i> Process Files
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                        <h2 class="card-title mb-0 fs-5">Extracted Data</h2>
+                        <div>
+                            <button class="btn btn-outline-secondary me-2" id="downloadCSV" disabled>
+                                <i class="fas fa-download me-1"></i> Download CSV
+                            </button>
+                            <button class="btn btn-primary" id="uploadToAzure" disabled>
+                                <i class="fas fa-upload me-1"></i> Upload to Azure
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Search and Filter -->
+                        <div class="mb-4 d-flex flex-wrap gap-2">
+                            <div class="flex-grow-1 position-relative">
+                                <i class="fas fa-search position-absolute text-muted" style="top: 10px; left: 10px;"></i>
+                                <input type="text" class="form-control ps-4" id="searchInput" placeholder="Search codes or descriptions">
+                            </div>
+                            
+                            <select class="form-select" style="width: 150px;" id="payerFilter">
+                                <option value="all_payers">All Payers</option>
+                                <!-- Payers will be added via JavaScript -->
+                            </select>
+                            
+                            <select class="form-select" style="width: 180px;" id="lobFilter">
+                                <option value="all_lines">All Lines</option>
+                                <!-- Lines of business will be added via JavaScript -->
+                            </select>
+                        </div>
+                        
+                        <!-- Results Table -->
+                        <div class="table-responsive border rounded">
+                            <table class="table" id="resultsTable">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="code">Code <i class="fas fa-sort ms-1"></i></th>
+                                        <th data-sort="codeType">Type <i class="fas fa-sort ms-1"></i></th>
+                                        <th data-sort="payerName">Payer <i class="fas fa-sort ms-1"></i></th>
+                                        <th data-sort="lineOfBusiness">Line of Business <i class="fas fa-sort ms-1"></i></th>
+                                        <th data-sort="year">Year <i class="fas fa-sort ms-1"></i></th>
+                                        <th data-sort="sourceFile">Source File <i class="fas fa-sort ms-1"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultsBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            No data available. Upload and process PDFs to extract codes.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="d-flex justify-content-center mt-3">
+                            <nav aria-label="Results pagination">
+                                <ul class="pagination" id="resultsPagination">
+                                    <!-- Pagination will be added via JavaScript -->
+                                </ul>
+                            </nav>
+                        </div>
+                        
+                        <div class="text-center text-muted small mt-2" id="paginationInfo">
+                            <!-- Pagination info will be added via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Azure Upload Dialog -->
+    <div class="modal fade" id="azureModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Azure Databricks Connection</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="azureForm">
+                        <div class="mb-3">
+                            <label for="workspaceUrl" class="form-label">Workspace URL</label>
+                            <input type="url" class="form-control" id="workspaceUrl" placeholder="https://adb-xxx.azuredatabricks.net" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="accessToken" class="form-label">Access Token</label>
+                            <input type="password" class="form-control" id="accessToken" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="directoryPath" class="form-label">Directory Path</label>
+                            <input type="text" class="form-control" id="directoryPath" placeholder="/FileStore/tables/extracted_codes" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmUpload">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; <span id="currentYear"></span> Prior Authorization Manager. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Main JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize variables
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const uploadedFilesDiv = document.getElementById('uploadedFiles');
+            const filesList = document.getElementById('filesList');
+            const metadataForm = document.getElementById('metadataForm');
+            const currentFileName = document.getElementById('currentFileName');
+            const yearSelect = document.getElementById('year');
+            const payerNameInput = document.getElementById('payerName');
+            const lineOfBusinessSelect = document.getElementById('lineOfBusiness');
+            const prevFileBtn = document.getElementById('prevFile');
+            const nextFileBtn = document.getElementById('nextFile');
+            const processFilesBtn = document.getElementById('processFiles');
+            const searchInput = document.getElementById('searchInput');
+            const payerFilter = document.getElementById('payerFilter');
+            const lobFilter = document.getElementById('lobFilter');
+            const resultsTable = document.getElementById('resultsTable');
+            const resultsBody = document.getElementById('resultsBody');
+            const resultsPagination = document.getElementById('resultsPagination');
+            const paginationInfo = document.getElementById('paginationInfo');
+            const downloadCSVBtn = document.getElementById('downloadCSV');
+            const uploadToAzureBtn = document.getElementById('uploadToAzure');
+            const azureModal = new bootstrap.Modal(document.getElementById('azureModal'));
+            const confirmUploadBtn = document.getElementById('confirmUpload');
+            
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Populate year options
+            const currentYear = new Date().getFullYear();
+            for (let year = 2020; year <= currentYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+            yearSelect.value = currentYear;
+            
+            // State variables
+            let uploadedFiles = [];
+            let selectedFileIndex = 0;
+            let extractedCodes = [];
+            let currentPage = 1;
+            let itemsPerPage = 10;
+            let sortField = 'code';
+            let sortDirection = 'asc';
+            let searchTerm = '';
+            let payerFilterValue = 'all_payers';
+            let lobFilterValue = 'all_lines';
+            
+            // Function to open file input when upload area is clicked
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length > 0) {
+                    handleFiles(fileInput.files);
+                }
+            });
+            
+            // Handle drag and drop
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragging');
+            });
+            
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.classList.remove('dragging');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragging');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+            
+            // Handle file uploads
+            function handleFiles(files) {
+                const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf');
+                
+                if (pdfFiles.length < files.length) {
+                    alert('Only PDF files are accepted');
+                }
+                
+                if (pdfFiles.length > 0) {
+                    // Add files to state
+                    pdfFiles.forEach(file => {
+                        const fileId = Date.now() + Math.random().toString(36).substr(2, 9);
+                        uploadedFiles.push({
+                            id: fileId,
+                            file: file,
+                            status: 'pending'
+                        });
+                    });
+                    
+                    // Update UI
+                    updateFilesUI();
+                    
+                    // If this is the first file, select it
+                    if (uploadedFiles.length === 1) {
+                        selectFile(0);
+                    }
+                    
+                    // Enable process button
+                    processFilesBtn.disabled = false;
+                }
+            }
+            
+            // Update files UI
+            function updateFilesUI() {
+                if (uploadedFiles.length > 0) {
+                    uploadedFilesDiv.classList.remove('d-none');
+                    filesList.innerHTML = '';
+                    
+                    uploadedFiles.forEach((fileObj, index) => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        fileItem.innerHTML = `
+                            <div>
+                                <i class="fas fa-file-pdf file-icon"></i>
+                                <span>${fileObj.file.name}</span>
+                            </div>
+                            <button class="btn btn-sm btn-link text-danger remove-file" data-index="${index}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        filesList.appendChild(fileItem);
+                        
+                        // Add click event to select file
+                        fileItem.addEventListener('click', function(e) {
+                            if (!e.target.closest('.remove-file')) {
+                                selectFile(index);
+                            }
+                        });
+                    });
+                    
+                    // Add event listeners to remove buttons
+                    document.querySelectorAll('.remove-file').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const index = parseInt(btn.getAttribute('data-index'));
+                            removeFile(index);
+                        });
+                    });
+                } else {
+                    uploadedFilesDiv.classList.add('d-none');
+                    processFilesBtn.disabled = true;
+                }
+            }
+            
+            // Select a file for metadata entry
+            function selectFile(index) {
+                selectedFileIndex = index;
+                const selectedFile = uploadedFiles[index];
+                
+                // Show metadata form
+                metadataForm.classList.remove('d-none');
+                currentFileName.textContent = selectedFile.file.name;
+                
+                // Set form values if metadata exists
+                if (selectedFile.metadata) {
+                    payerNameInput.value = selectedFile.metadata.payerName;
+                    yearSelect.value = selectedFile.metadata.year;
+                    lineOfBusinessSelect.value = selectedFile.metadata.lineOfBusiness;
+                } else {
+                    payerNameInput.value = '';
+                    yearSelect.value = currentYear;
+                    lineOfBusinessSelect.value = 'Medicare';
+                }
+                
+                // Update previous/next buttons
+                prevFileBtn.disabled = index === 0;
+                nextFileBtn.disabled = index === uploadedFiles.length - 1;
+            }
+            
+            // Remove a file
+            function removeFile(index) {
+                uploadedFiles.splice(index, 1);
+                updateFilesUI();
+                
+                if (uploadedFiles.length === 0) {
+                    metadataForm.classList.add('d-none');
+                } else if (selectedFileIndex >= uploadedFiles.length) {
+                    selectFile(uploadedFiles.length - 1);
+                } else {
+                    selectFile(selectedFileIndex);
+                }
+            }
+            
+            // Previous file button
+            prevFileBtn.addEventListener('click', function() {
+                if (selectedFileIndex > 0) {
+                    // Save current metadata
+                    saveCurrentMetadata();
+                    
+                    // Go to previous file
+                    selectFile(selectedFileIndex - 1);
+                }
+            });
+            
+            // Next file button
+            nextFileBtn.addEventListener('click', function() {
+                if (selectedFileIndex < uploadedFiles.length - 1) {
+                    // Save current metadata
+                    saveCurrentMetadata();
+                    
+                    // Go to next file
+                    selectFile(selectedFileIndex + 1);
+                }
+            });
+            
+            // Save metadata for current file
+            function saveCurrentMetadata() {
+                if (selectedFileIndex >= 0 && selectedFileIndex < uploadedFiles.length) {
+                    uploadedFiles[selectedFileIndex].metadata = {
+                        payerName: payerNameInput.value,
+                        year: parseInt(yearSelect.value),
+                        lineOfBusiness: lineOfBusinessSelect.value
+                    };
+                }
+            }
+            
+            // Process files button
+            processFilesBtn.addEventListener('click', async function() {
+                // Save current metadata
+                saveCurrentMetadata();
+                
+                // Check if any files have incomplete metadata
+                const filesWithoutMetadata = uploadedFiles.filter(file => !file.metadata || 
+                                                                       !file.metadata.payerName);
+                
+                if (filesWithoutMetadata.length > 0) {
+                    alert('Please provide metadata for all uploaded files before processing');
+                    return;
+                }
+                
+                // Update button state
+                processFilesBtn.disabled = true;
+                processFilesBtn.innerHTML = 'Processing...';
+                
+                try {
+                    // Process each file sequentially
+                    for (const file of uploadedFiles) {
+                        // Skip files that have already been processed
+                        if (file.status === 'processed') continue;
+                        
+                        // Update file status
+                        file.status = 'processing';
+                        updateFilesUI();
+                        
+                        // Create form data
+                        const formData = new FormData();
+                        formData.append('file', file.file);
+                        formData.append('payer_name', file.metadata.payerName);
+                        formData.append('year', file.metadata.year);
+                        formData.append('line_of_business', file.metadata.lineOfBusiness);
+                        
+                        // Process the file
+                        const response = await fetch('/api/process-pdf', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            file.status = 'processed';
+                        } else {
+                            const error = await response.json();
+                            file.status = 'error';
+                            file.error = error.error || 'Failed to process file';
+                            alert(`Error processing ${file.file.name}: ${file.error}`);
+                        }
+                        
+                        // Update UI
+                        updateFilesUI();
+                    }
+                    
+                    // Fetch updated codes
+                    await fetchCodes();
+                    
+                    alert('All files processed successfully');
+                } catch (error) {
+                    console.error('Error processing files:', error);
+                    alert(`Error processing files: ${error.message}`);
+                } finally {
+                    // Update button state
+                    processFilesBtn.disabled = false;
+                    processFilesBtn.innerHTML = '<i class="fas fa-plus-circle me-2"></i> Process Files';
+                }
+            });
+            
+            // Fetch codes from API
+            async function fetchCodes() {
+                try {
+                    const response = await fetch('/api/codes');
+                    if (response.ok) {
+                        extractedCodes = await response.json();
+                        updateCodesUI();
+                        
+                        // Enable buttons if codes are available
+                        downloadCSVBtn.disabled = extractedCodes.length === 0;
+                        uploadToAzureBtn.disabled = extractedCodes.length === 0;
+                        
+                        // Update filter options
+                        updateFilterOptions();
+                    } else {
+                        console.error('Error fetching codes:', await response.text());
+                    }
+                } catch (error) {
+                    console.error('Error connecting to API:', error);
+                }
+            }
+            
+            // Update filter options based on extracted codes
+            function updateFilterOptions() {
+                // Get unique payers
+                const uniquePayers = [...new Set(extractedCodes.map(code => code.payerName))];
+                
+                // Update payer filter options
+                payerFilter.innerHTML = '<option value="all_payers">All Payers</option>';
+                uniquePayers.forEach(payer => {
+                    const option = document.createElement('option');
+                    option.value = payer;
+                    option.textContent = payer;
+                    payerFilter.appendChild(option);
+                });
+                
+                // Get unique lines of business
+                const uniqueLOBs = [...new Set(extractedCodes.map(code => code.lineOfBusiness))];
+                
+                // Update LOB filter options
+                lobFilter.innerHTML = '<option value="all_lines">All Lines</option>';
+                uniqueLOBs.forEach(lob => {
+                    const option = document.createElement('option');
+                    option.value = lob;
+                    option.textContent = lob;
+                    lobFilter.appendChild(option);
+                });
+            }
+            
+            // Update codes UI
+            function updateCodesUI() {
+                // Filter and sort codes
+                let filtered = filterCodes();
+                let sorted = sortCodes(filtered);
+                
+                // Get current page items
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const currentItems = sorted.slice(startIndex, endIndex);
+                
+                // Update table
+                if (currentItems.length === 0) {
+                    resultsBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                No data available. Upload and process PDFs to extract codes.
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    resultsBody.innerHTML = '';
+                    
+                    currentItems.forEach(code => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="fw-medium">${code.code}</td>
+                            <td>${code.codeType}</td>
+                            <td>${code.payerName}</td>
+                            <td>${code.lineOfBusiness}</td>
+                            <td>${code.year}</td>
+                            <td class="text-truncate" style="max-width: 150px;" title="${code.sourceFile}">
+                                ${code.sourceFile}
+                            </td>
+                        `;
+                        resultsBody.appendChild(row);
+                    });
+                }
+                
+                // Update pagination
+                updatePagination(sorted.length);
+            }
+            
+            // Filter codes based on search term and filters
+            function filterCodes() {
+                return extractedCodes.filter(code => {
+                    // Search filter
+                    const matchesSearch = searchTerm === '' || 
+                        code.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        code.payerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        code.lineOfBusiness.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        code.sourceFile.toLowerCase().includes(searchTerm.toLowerCase());
+                    
+                    // Payer filter
+                    const matchesPayer = payerFilterValue === 'all_payers' || code.payerName === payerFilterValue;
+                    
+                    // LOB filter
+                    const matchesLOB = lobFilterValue === 'all_lines' || code.lineOfBusiness === lobFilterValue;
+                    
+                    return matchesSearch && matchesPayer && matchesLOB;
+                });
+            }
+            
+            // Sort codes based on sort field and direction
+            function sortCodes(codes) {
+                return [...codes].sort((a, b) => {
+                    if (a[sortField] < b[sortField]) {
+                        return sortDirection === 'asc' ? -1 : 1;
+                    }
+                    if (a[sortField] > b[sortField]) {
+                        return sortDirection === 'asc' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+            
+            // Update pagination UI
+            function updatePagination(totalItems) {
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                
+                // Update pagination info
+                if (totalItems > 0) {
+                    const start = (currentPage - 1) * itemsPerPage + 1;
+                    const end = Math.min(currentPage * itemsPerPage, totalItems);
+                    paginationInfo.textContent = `Showing ${start} to ${end} of ${totalItems} results`;
+                } else {
+                    paginationInfo.textContent = '';
+                }
+                
+                // Generate pagination links
+                resultsPagination.innerHTML = '';
+                
+                // Previous button
+                const prevItem = document.createElement('li');
+                prevItem.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                prevItem.innerHTML = `
+                    <a class="page-link" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                `;
+                prevItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        currentPage--;
+                        updateCodesUI();
+                    }
+                });
+                resultsPagination.appendChild(prevItem);
+                
+                // Page numbers
+                const maxPagesToShow = 5;
+                let startPage = 1;
+                let endPage = totalPages;
+                
+                if (totalPages > maxPagesToShow) {
+                    const halfPages = Math.floor(maxPagesToShow / 2);
+                    startPage = Math.max(1, currentPage - halfPages);
+                    endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+                    
+                    if (endPage - startPage + 1 < maxPagesToShow) {
+                        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                    }
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageItem = document.createElement('li');
+                    pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    pageItem.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                    pageItem.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        currentPage = i;
+                        updateCodesUI();
+                    });
+                    resultsPagination.appendChild(pageItem);
+                }
+                
+                // Next button
+                const nextItem = document.createElement('li');
+                nextItem.className = `page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}`;
+                nextItem.innerHTML = `
+                    <a class="page-link" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                `;
+                nextItem.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        updateCodesUI();
+                    }
+                });
+                resultsPagination.appendChild(nextItem);
+            }
+            
+            // Search input event
+            searchInput.addEventListener('input', function() {
+                searchTerm = searchInput.value;
+                currentPage = 1;
+                updateCodesUI();
+            });
+            
+            // Payer filter event
+            payerFilter.addEventListener('change', function() {
+                payerFilterValue = payerFilter.value;
+                currentPage = 1;
+                updateCodesUI();
+            });
+            
+            // LOB filter event
+            lobFilter.addEventListener('change', function() {
+                lobFilterValue = lobFilter.value;
+                currentPage = 1;
+                updateCodesUI();
+            });
+            
+            // Table header sort event
+            resultsTable.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', function() {
+                    const field = th.getAttribute('data-sort');
+                    
+                    // Update sort direction if same field
+                    if (field === sortField) {
+                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortField = field;
+                        sortDirection = 'asc';
+                    }
+                    
+                    // Update UI
+                    updateCodesUI();
+                    
+                    // Update table headers
+                    resultsTable.querySelectorAll('th[data-sort]').forEach(header => {
+                        const headerField = header.getAttribute('data-sort');
+                        const icon = header.querySelector('i');
+                        
+                        if (headerField === sortField) {
+                            icon.className = `fas fa-sort-${sortDirection === 'asc' ? 'up' : 'down'} ms-1`;
+                        } else {
+                            icon.className = 'fas fa-sort ms-1';
+                        }
+                    });
+                });
+            });
+            
+            // Download CSV button
+            downloadCSVBtn.addEventListener('click', async function() {
+                if (extractedCodes.length === 0) {
+                    alert('No codes to download');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/export-csv');
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'extracted_codes.csv';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    } else {
+                        const error = await response.json();
+                        alert(`Error downloading CSV: ${error.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error downloading CSV:', error);
+                    alert(`Error downloading CSV: ${error.message}`);
+                }
+            });
+            
+            // Upload to Azure button
+            uploadToAzureBtn.addEventListener('click', function() {
+                if (extractedCodes.length === 0) {
+                    alert('No codes to upload');
+                    return;
+                }
+                
+                // Show Azure modal
+                azureModal.show();
+            });
+            
+            // Confirm upload button
+            confirmUploadBtn.addEventListener('click', async function() {
+                const workspaceUrl = document.getElementById('workspaceUrl').value;
+                const accessToken = document.getElementById('accessToken').value;
+                const directoryPath = document.getElementById('directoryPath').value;
+                
+                if (!workspaceUrl || !accessToken || !directoryPath) {
+                    alert('Please fill out all Azure connection details');
+                    return;
+                }
+                
+                try {
+                    // Disable button and show loading state
+                    confirmUploadBtn.disabled = true;
+                    confirmUploadBtn.textContent = 'Uploading...';
+                    
+                    // Upload to Azure
+                    const response = await fetch('/api/upload-to-azure', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            workspace_url: workspaceUrl,
+                            access_token: accessToken,
+                            directory_path: directoryPath
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(result.message);
+                        azureModal.hide();
+                    } else {
+                        alert(`Error uploading to Azure: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error uploading to Azure:', error);
+                    alert(`Error uploading to Azure: ${error.message}`);
+                } finally {
+                    // Reset button state
+                    confirmUploadBtn.disabled = false;
+                    confirmUploadBtn.textContent = 'Upload';
+                }
+            });
+            
+            // Reset Azure modal on close
+            document.getElementById('azureModal').addEventListener('hidden.bs.modal', function() {
+                document.getElementById('azureForm').reset();
+            });
+            
+            // Fetch codes when page loads
+            fetchCodes();
+        });
+    </script>
+</body>
+</html>
