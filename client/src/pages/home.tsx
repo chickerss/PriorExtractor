@@ -3,14 +3,17 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { FileUploader } from "@/components/file-uploader";
 import { FileMetadataForm } from "@/components/file-metadata-form";
 import { ResultsSection } from "@/components/results-section";
+import { AzureDialog } from "@/components/azure-dialog";
 import { Button } from "@/components/ui/button";
 import { 
   UploadedFile, 
   FileMetadata, 
-  ExtractedCode
+  ExtractedCode,
+  AzureConnection
 } from "@shared/schema";
 import { processPDFFile } from "@/lib/pdf-utils";
 import { downloadExtractedCodesAsCSV } from "@/lib/csv-utils";
+import { uploadToAzureDatabricks } from "@/lib/azure-utils";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +25,8 @@ export default function Home() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showAzureDialog, setShowAzureDialog] = useState(false);
 
   // Get extracted codes from the backend
   const { 
@@ -169,7 +174,53 @@ export default function Home() {
       description: "CSV file downloaded successfully",
     });
   };
-
+  
+  // Handle Azure upload
+  const handleUploadToAzure = () => {
+    if (extractedCodes.length === 0) {
+      toast({
+        title: "No data",
+        description: "There are no extracted codes to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setShowAzureDialog(true);
+  };
+  
+  // Handle Azure upload with connection details
+  const handleAzureUpload = async (connection: AzureConnection) => {
+    setIsUploading(true);
+    
+    try {
+      const result = await uploadToAzureDatabricks(extractedCodes, connection);
+      
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+        
+        setShowAzureDialog(false);
+      } else {
+        toast({
+          title: "Error",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading to Azure:", error);
+      toast({
+        title: "Error",
+        description: `Failed to upload to Azure: ${error instanceof Error ? error.message : String(error)}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
 
   return (
@@ -251,7 +302,7 @@ export default function Home() {
                 <ResultsSection 
                   extractedCodes={extractedCodes}
                   onDownloadCSV={handleDownloadCSV}
-                  onUploadToAzure={() => {}}
+                  onUploadToAzure={handleUploadToAzure}
                   isLoading={isLoadingCodes}
                 />
               </div>
@@ -267,6 +318,14 @@ export default function Home() {
           </p>
         </div>
       </footer>
+      
+      {/* Azure Dialog */}
+      <AzureDialog
+        open={showAzureDialog}
+        onOpenChange={setShowAzureDialog}
+        onUpload={handleAzureUpload}
+        isUploading={isUploading}
+      />
     </div>
   );
 }

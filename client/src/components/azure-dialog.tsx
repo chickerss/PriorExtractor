@@ -41,7 +41,7 @@ export function AzureDialog({
     defaultValues: {
       workspaceUrl: "",
       accessToken: "",
-      directoryPath: "dbfs:/FileStore/prior-auth-data/",
+      directoryPath: "dbfs:/FileStore/database/medical_codes/",
     },
   });
 
@@ -57,9 +57,9 @@ export function AzureDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Upload to Azure Databricks</DialogTitle>
+          <DialogTitle>Upload to Azure Databricks Database</DialogTitle>
           <DialogDescription>
-            Enter your Azure Databricks connection information to upload the extracted data.
+            Enter your Azure Databricks connection information to upload the extracted data to your Databricks database.
           </DialogDescription>
         </DialogHeader>
         
@@ -70,7 +70,7 @@ export function AzureDialog({
               name="workspaceUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Workspace URL</FormLabel>
+                  <FormLabel>Databricks Workspace URL</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="https://your-workspace.azuredatabricks.net"
@@ -78,6 +78,7 @@ export function AzureDialog({
                     />
                   </FormControl>
                   <FormMessage />
+                  <div className="text-xs text-gray-500 mt-1">The URL of your Azure Databricks workspace</div>
                 </FormItem>
               )}
             />
@@ -87,15 +88,16 @@ export function AzureDialog({
               name="accessToken"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Access Token</FormLabel>
+                  <FormLabel>Databricks Access Token</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Your access token"
+                      placeholder="Your Databricks access token"
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
+                  <div className="text-xs text-gray-500 mt-1">Personal access token with DBFS permissions</div>
                 </FormItem>
               )}
             />
@@ -105,14 +107,15 @@ export function AzureDialog({
               name="directoryPath"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>DBFS Directory Path</FormLabel>
+                  <FormLabel>Database Storage Path</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="dbfs:/FileStore/prior-auth-data/"
+                      placeholder="dbfs:/FileStore/database/codes/"
                       {...field}
                     />
                   </FormControl>
                   <FormMessage />
+                  <div className="text-xs text-gray-500 mt-1">The path where your data will be stored in Databricks File System (DBFS)</div>
                 </FormItem>
               )}
             />

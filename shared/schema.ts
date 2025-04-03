@@ -23,7 +23,14 @@ export const fileMetadataSchema = z.object({
   lineOfBusiness: z.string().optional(),
 });
 
-// Azure connection functionality has been removed
+// Define Azure connection schema
+export const azureConnectionSchema = z.object({
+  workspaceUrl: z.string().url(),
+  accessToken: z.string().min(1),
+  directoryPath: z.string().min(1),
+});
+
+export type AzureConnection = z.infer<typeof azureConnectionSchema>;
 
 // Types for the application
 export type InsertExtractedCode = z.infer<typeof insertExtractedCodeSchema>;
