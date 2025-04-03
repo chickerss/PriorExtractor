@@ -101,9 +101,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Parse and validate metadata
       const metadataRaw = {
-        payerName: req.body.payerName,
+        payerName: req.body.payer_name,
         year: parseInt(req.body.year, 10),
-        lineOfBusiness: req.body.lineOfBusiness,
+        lineOfBusiness: req.body.line_of_business,
         sourceFile: req.file.originalname,
       };
       
