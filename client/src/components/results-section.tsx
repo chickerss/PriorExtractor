@@ -25,12 +25,12 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { Download, Upload, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { Download, ArrowUp, ArrowDown, Search } from "lucide-react";
 
 interface ResultsSectionProps {
   extractedCodes: ExtractedCode[];
   onDownloadCSV: () => void;
-  onUploadToAzure: () => void;
+  onUploadToAzure?: () => void; // Make this optional
   isLoading?: boolean;
 }
 
@@ -156,15 +156,6 @@ export function ResultsSection({
           >
             <Download className="h-4 w-4 mr-1.5" />
             Download CSV
-          </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={onUploadToAzure}
-            disabled={isLoading || extractedCodes.length === 0}
-          >
-            <Upload className="h-4 w-4 mr-1.5" />
-            Upload to Azure
           </Button>
         </div>
       </div>
