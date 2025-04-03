@@ -84,13 +84,21 @@ export function extractCodesFromText(
  */
 export async function processPdf(
   pdfBuffer: ArrayBuffer, 
-  metadata: { payerName: string; year: number; lineOfBusiness: string; sourceFile: string }
+  metadata: { payerName?: string; year?: number; lineOfBusiness?: string; sourceFile: string }
 ): Promise<InsertExtractedCode[]> {
   // Extract text from PDF
   const text = await extractTextFromPdf(pdfBuffer);
   
-  // Extract codes from text
-  const codes = extractCodesFromText(text, metadata);
+  // Extract codes from text with normalized metadata
+  // Create a new metadata object with default values for optional fields
+  const normalizedMetadata = {
+    payerName: metadata.payerName || "Unknown",
+    year: metadata.year || new Date().getFullYear(),
+    lineOfBusiness: metadata.lineOfBusiness || "Unknown",
+    sourceFile: metadata.sourceFile
+  };
+  
+  const codes = extractCodesFromText(text, normalizedMetadata);
   
   return codes;
 }

@@ -18,9 +18,9 @@ export const insertExtractedCodeSchema = extractedCodeSchema.omit({
 
 // Create validation schema for file metadata
 export const fileMetadataSchema = z.object({
-  payerName: z.string().min(1, "Payer name is required"),
-  year: z.number().int().min(2000).max(2100),
-  lineOfBusiness: z.string().min(1, "Line of business is required"),
+  payerName: z.string().optional(),
+  year: z.number().int().min(2000).max(2100).optional(),
+  lineOfBusiness: z.string().optional(),
 });
 
 // Azure connection functionality has been removed

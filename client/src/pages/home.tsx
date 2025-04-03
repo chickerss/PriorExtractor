@@ -41,9 +41,19 @@ export default function Home() {
     }) => {
       const formData = new FormData();
       formData.append("file", data.file);
-      formData.append("payerName", data.metadata.payerName);
-      formData.append("year", data.metadata.year.toString());
-      formData.append("lineOfBusiness", data.metadata.lineOfBusiness);
+      
+      // Only append metadata fields if they exist
+      if (data.metadata && data.metadata.payerName) {
+        formData.append("payer_name", data.metadata.payerName);
+      }
+      
+      if (data.metadata && data.metadata.year) {
+        formData.append("year", data.metadata.year.toString());
+      }
+      
+      if (data.metadata && data.metadata.lineOfBusiness) {
+        formData.append("line_of_business", data.metadata.lineOfBusiness);
+      }
       
       const response = await fetch("/api/process-pdf", {
         method: "POST",
@@ -82,18 +92,6 @@ export default function Home() {
 
   // Handle file processing
   const handleProcessFiles = async () => {
-    // Check if any files have incomplete metadata
-    const filesWithoutMetadata = uploadedFiles.filter(file => !file.metadata);
-    
-    if (filesWithoutMetadata.length > 0) {
-      toast({
-        title: "Missing metadata",
-        description: "Please provide metadata for all uploaded files before processing",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsProcessing(true);
     
     try {
@@ -111,10 +109,17 @@ export default function Home() {
           )
         );
         
+        // Setup default metadata if none provided
+        const defaultMetadata = {
+          payerName: "Unknown Payer",
+          year: new Date().getFullYear(),
+          lineOfBusiness: "Unknown"
+        };
+        
         // Process the file using the mutation
         await processPdfMutation.mutateAsync({ 
           file: file.file, 
-          metadata: file.metadata! 
+          metadata: file.metadata || defaultMetadata 
         });
         
         // Update file status to processed

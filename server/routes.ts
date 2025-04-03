@@ -99,40 +99,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
-      // Parse and validate metadata
-      const metadataRaw = {
-        payerName: req.body.payer_name,
-        year: parseInt(req.body.year, 10),
-        lineOfBusiness: req.body.line_of_business,
+      // Setup metadata values with optional fields
+      const metadataRaw: any = {
         sourceFile: req.file.originalname,
       };
       
-      try {
-        const metadata = fileMetadataSchema.parse(metadataRaw);
-        
-        // Process the PDF file
-        const extractedCodes = await processPdf(req.file.buffer, {
-          ...metadata,
-          sourceFile: req.file.originalname,
-        });
-        
-        // Save the extracted codes to storage
-        const savedCodes = await storage.saveExtractedCodes(extractedCodes);
-        
-        return res.json({ 
-          message: "PDF processed successfully", 
-          codesExtracted: savedCodes.length,
-          codes: savedCodes 
-        });
-      } catch (error) {
-        if (error instanceof ZodError) {
-          return res.status(400).json({ 
-            message: "Invalid metadata",
-            errors: fromZodError(error).message
-          });
-        }
-        throw error;
+      // Only add metadata fields if they are provided
+      if (req.body.payer_name) {
+        metadataRaw.payerName = req.body.payer_name;
       }
+      
+      if (req.body.year) {
+        metadataRaw.year = parseInt(req.body.year, 10);
+      }
+      
+      if (req.body.line_of_business) {
+        metadataRaw.lineOfBusiness = req.body.line_of_business;
+      }
+      
+      // Process the PDF file with the metadata (default or provided)
+      const extractedCodes = await processPdf(req.file.buffer, {
+        ...metadataRaw,
+        sourceFile: req.file.originalname,
+      });
+      
+      // Save the extracted codes to storage
+      const savedCodes = await storage.saveExtractedCodes(extractedCodes);
+      
+      return res.json({ 
+        message: "PDF processed successfully", 
+        codesExtracted: savedCodes.length,
+        codes: savedCodes 
+      });
     } catch (error) {
       console.error("Error processing PDF:", error);
       return res.status(500).json({ 
