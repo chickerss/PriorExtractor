@@ -25,7 +25,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { Download, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { Download, ArrowUp, ArrowDown, Search, Upload } from "lucide-react";
 
 interface ResultsSectionProps {
   extractedCodes: ExtractedCode[];
@@ -158,6 +158,18 @@ export function ResultsSection({
             <Download className="h-4 w-4 mr-1.5" />
             Download CSV
           </Button>
+          {onUploadToAzure && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onUploadToAzure}
+              disabled={isLoading || extractedCodes.length === 0}
+              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+            >
+              <Upload className="h-4 w-4 mr-1.5" />
+              Upload to Azure
+            </Button>
+          )}
         </div>
       </div>
 
