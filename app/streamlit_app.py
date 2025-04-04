@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # API base URL
-API_BASE_URL = "http://localhost:8501/api"
+API_BASE_URL = "http://localhost:5001/api"
 
 # Define state variables
 if 'extracted_codes' not in st.session_state:
