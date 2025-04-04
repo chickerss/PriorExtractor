@@ -4,9 +4,9 @@ import subprocess
 
 def run_flask_app():
     """Run the Flask application"""
-    print("Starting Flask application on port 5001...")
+    print("Starting Flask application on port 8501...")
     from app.app import app
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=8501, debug=True)
 
 def run_streamlit_app():
     import streamlit.web.cli as stcli
