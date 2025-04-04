@@ -9,7 +9,7 @@ export function generateCSVFromCodes(codes: ExtractedCode[]): string {
   }
   
   // Define headers (reordered as requested)
-  const headers = ["Payer", "Plan", "Line of Business", "Year", "Code Type", "Code", "Source File"];
+  const headers = ["Payer", "Plan", "Line of Business", "Year", "Code Type", "Code", "Category", "Subcategory", "Description", "Source File"];
   
   // Create CSV header row
   const csvContent = [
@@ -23,6 +23,9 @@ export function generateCSVFromCodes(codes: ExtractedCode[]): string {
       code.year || "",
       code.codeType || "",
       code.code || "",
+      `"${code.category?.replace(/"/g, '""') || ""}"`,
+      `"${code.subcategory?.replace(/"/g, '""') || ""}"`,
+      `"${code.description?.replace(/"/g, '""') || ""}"`,
       `"${code.sourceFile?.replace(/"/g, '""') || ""}"`
     ].join(","))
   ].join("\n");

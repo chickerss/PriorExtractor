@@ -1,5 +1,6 @@
 import { parsePDF } from './pdf-parse-wrapper';
 import { InsertExtractedCode } from '@shared/schema';
+import { enhanceWithLookupData } from './code-lookup';
 
 // Regular expressions to identify CPT, HCPCS, and PLA codes
 // CPT codes are 5 digits, including category II (XXXXX) and category III (XXXXT)
@@ -105,7 +106,10 @@ export async function processPdf(
     sourceFile: metadata.sourceFile
   };
   
-  const codes = extractCodesFromText(text, normalizedMetadata);
+  let codes = extractCodesFromText(text, normalizedMetadata);
+  
+  // Enhance codes with category, subcategory, and description from lookup
+  codes = enhanceWithLookupData(codes);
   
   return codes;
 }

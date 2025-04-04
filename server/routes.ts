@@ -185,6 +185,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { id: 'year', title: 'Year' },
           { id: 'codeType', title: 'Code Type' },
           { id: 'code', title: 'Code' },
+          { id: 'category', title: 'Category' },
+          { id: 'subcategory', title: 'Subcategory' },
+          { id: 'description', title: 'Description' },
           { id: 'sourceFile', title: 'Source File' },
         ]
       });

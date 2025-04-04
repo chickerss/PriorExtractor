@@ -10,6 +10,9 @@ export const extractedCodeSchema = z.object({
   lineOfBusiness: z.string().min(1),
   year: z.number().int().min(2000).max(2100),
   sourceFile: z.string().min(1),
+  category: z.string().optional(),
+  subcategory: z.string().optional(),
+  description: z.string().optional(),
 });
 
 // Create the insert schema for extracted codes
@@ -50,4 +53,11 @@ export interface UploadedFile {
 
 export interface ProcessedFile extends UploadedFile {
   extractedCodes: ExtractedCode[];
+}
+
+// Interface for code lookup information
+export interface CodeLookupData {
+  category: string;
+  subcategory: string;
+  description: string;
 }

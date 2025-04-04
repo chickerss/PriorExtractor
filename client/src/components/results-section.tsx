@@ -80,7 +80,10 @@ export function ResultsSection({
         code.payerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (code.planName && code.planName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         code.lineOfBusiness.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        code.sourceFile.toLowerCase().includes(searchTerm.toLowerCase());
+        code.sourceFile.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (code.category && code.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (code.subcategory && code.subcategory.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (code.description && code.description.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesPayer = payerFilter === "all_payers" || code.payerName === payerFilter;
       const matchesLOB = lobFilter === "all_lines" || code.lineOfBusiness === lobFilter;
@@ -309,18 +312,51 @@ export function ResultsSection({
                     <ArrowDown className="inline-block ml-1 h-4 w-4" />
                 )}
               </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:text-gray-700"
+                onClick={() => handleSort("category")}
+              >
+                Category
+                {sortField === "category" && (
+                  sortDirection === "asc" ? 
+                    <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
+                    <ArrowDown className="inline-block ml-1 h-4 w-4" />
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:text-gray-700"
+                onClick={() => handleSort("subcategory")}
+              >
+                Subcategory
+                {sortField === "subcategory" && (
+                  sortDirection === "asc" ? 
+                    <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
+                    <ArrowDown className="inline-block ml-1 h-4 w-4" />
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:text-gray-700"
+                onClick={() => handleSort("description")}
+              >
+                Description
+                {sortField === "description" && (
+                  sortDirection === "asc" ? 
+                    <ArrowUp className="inline-block ml-1 h-4 w-4" /> : 
+                    <ArrowDown className="inline-block ml-1 h-4 w-4" />
+                )}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : currentItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   No data available. Upload and process PDFs to extract codes.
                 </TableCell>
               </TableRow>
@@ -335,6 +371,11 @@ export function ResultsSection({
                   <TableCell>{code.year}</TableCell>
                   <TableCell>{code.codeType}</TableCell>
                   <TableCell className="font-medium">{code.code}</TableCell>
+                  <TableCell>{code.category || "-"}</TableCell>
+                  <TableCell>{code.subcategory || "-"}</TableCell>
+                  <TableCell className="truncate max-w-xs" title={code.description || "N/A"}>
+                    {code.description || "-"}
+                  </TableCell>
                 </TableRow>
               ))
             )}
