@@ -9,10 +9,10 @@ def run_flask_app():
     app.run(host='0.0.0.0', port=5001, debug=True)
 
 def run_streamlit_app():
-    """Run the Streamlit application"""
-    print("Starting Streamlit application on port 8501...")
-    subprocess.run(["streamlit", "run", "app/streamlit_app.py", 
-                   "--server.port=8501", "--server.address=0.0.0.0"])
+    import streamlit.web.cli as stcli
+    import sys
+    sys.argv = ["streamlit", "run", "app/streamlit_app.py"]
+    sys.exit(stcli.main())
 
 if __name__ == "__main__":
     # Check command-line arguments
